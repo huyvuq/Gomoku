@@ -5,7 +5,7 @@ public class GomokuAI implements Player {
 	
 	EvaluationBoard eBoard;
 	BoardState boardState;
-	int playerFlag = 2; //
+	int playerFlag = 2; //TODO: change and program this so user can decide to go first or second
 	int _x, _y; //
 
 	//Change these two variables to adjust difficulty
@@ -34,7 +34,7 @@ public class GomokuAI implements Player {
 
 	}
 	
-public void evalChessBoardWithDirection(int player, EvaluationBoard eBoard, int direction) {
+	public void evalChessBoardWithDirection(int player, EvaluationBoard eBoard, int direction) {
 		
 		int ePC, eHuman;
 
@@ -111,7 +111,17 @@ public void evalChessBoardWithDirection(int player, EvaluationBoard eBoard, int 
 					}
 			}
 	}
+	
+	/**
+	 * Generate score depending on type of player (human or pc)
+	 * and move type (attack or defense, attack's point is twice as defense's)
+	 * @param index
+	 * @param attack
+	 * @return
+	 */
 	public int getScore(int index, boolean attack) {
+		if (index > 4)
+			System.out.println(index);
 		int finalScore = 0;
 		if (index == 0)
 			return finalScore;
@@ -123,7 +133,6 @@ public void evalChessBoardWithDirection(int player, EvaluationBoard eBoard, int 
 		
 		if (attack)
 			finalScore *=2;
-		
 		return finalScore;
 	}
 	
@@ -206,7 +215,12 @@ public void evalChessBoardWithDirection(int player, EvaluationBoard eBoard, int 
 
 
 	// @Override
-
+	/**
+	 * Calculate best move for a player
+	 * player 2 = PC's move
+	 * @param player 
+	 * @return the positon (point where next move should be)
+	 */
 	public Point AI(int player) {
 		alphaBeta(0, 1, 2,player);
 		Point temp = goPoint;
@@ -215,16 +229,6 @@ public void evalChessBoardWithDirection(int player, EvaluationBoard eBoard, int 
 			_y = temp.y;
 		}
 		return new Point(_x, _y);
-	}
-
-	@Override
-	public int getPlayerFlag() {
-		return playerFlag;
-	}
-
-	@Override
-	public void setPlayerFlag(int playerFlag) {
-		this.playerFlag = playerFlag;
 	}
 
 	@Override

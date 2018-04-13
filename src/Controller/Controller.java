@@ -5,14 +5,11 @@ import java.util.Optional;
 import java.util.Queue;
 import java.util.Stack;
 import java.util.StringTokenizer;
-import javax.swing.JButton;
-import javax.swing.JOptionPane;
 
 import Model.BoardState;
 import Model.GomokuAI;
 import Model.Player;
 import Model.Point;
-import View.Swing;
 import View.View;
 import javafx.event.ActionEvent;
 import javafx.event.EventHandler;
@@ -22,13 +19,24 @@ import javafx.scene.control.Button;
 import javafx.scene.control.ButtonType;
 import javafx.scene.image.Image;
 import javafx.scene.image.ImageView;
-
+/**
+ * Player default's symbol: X
+ * PC default's symbol: O
+ * @author Huy Vu
+ *
+ */
 public class Controller implements IController {
-	Swing swing;
 	public View view;
 	Player player;
 	int x1 = 0, y1 = 0;
 	Stack<Point> stack = new Stack<>();
+
+	Class<?> clazz = this.getClass();
+	InputStream o = clazz.getResourceAsStream("/Resources/o.png");
+	InputStream x = clazz.getResourceAsStream("/Resources/x.png");
+	Image imageO = new Image(o);
+	Image imageX = new Image(x);
+	boolean end = false;
 
 	public Controller() {
 
@@ -39,15 +47,6 @@ public class Controller implements IController {
 		return this.player.movePoint(player);
 	}
 
-	@Override
-	public int getPlayerFlag() {
-		return player.getPlayerFlag();
-	}
-
-	@Override
-	public void setPlayerFlag(int playerFlag) {
-		player.setPlayerFlag(playerFlag);
-	}
 
 	@Override
 	public BoardState getBoardState() {
@@ -60,73 +59,26 @@ public class Controller implements IController {
 	}
 
 	@Override
-	public void play(JButton c, JButton[][] a) {
-		StringTokenizer tokenizer = new StringTokenizer(c.getActionCommand(), ";");
-		int x = Integer.parseInt(tokenizer.nextToken());
-		int y = Integer.parseInt(tokenizer.nextToken());
-
-
-		if (getPlayerFlag() == 1) {
-			if (getBoardState().getPosition(x, y) == 0) {
-				getBoardState().setPosition(x, y, 1);
-				a[x][y].setText("X");
-				if (getBoardState().checkEnd(x, y) == 1) {
-					JOptionPane.showMessageDialog(swing, "You won!");
-					return;
-				}
-
-				// PC's turn
-
-				Point p = AI(2);
-				getBoardState().setPosition(p.x, p.y, 2);
-				a[p.x][p.y].setText("O");
-				if (getBoardState().checkEnd(p.x, p.y) == 2) {
-					JOptionPane.showMessageDialog(swing, "You lost!");
-					return;
-				}
-			}
-		}
-
-		
-
-	}
-
-	Class<?> clazz = this.getClass();
-	InputStream o = clazz.getResourceAsStream("/Resources/o.png");
-	InputStream x = clazz.getResourceAsStream("/Resources/x.png");
-	Image imageO = new Image(o);
-	Image imageX = new Image(x);
-	boolean end = false;
-
-	@Override
-	public boolean isEnd() {
-		return end;
-	}
-
-	@Override
 	public void play(Button c, Button[][] a) {
 		StringTokenizer tokenizer = new StringTokenizer(c.getAccessibleText(), ";");
 		int x = Integer.parseInt(tokenizer.nextToken());
 		int y = Integer.parseInt(tokenizer.nextToken());
 	
-		if (getPlayerFlag() == 1) {
-			if (getBoardState().getPosition(x, y) == 0) {
-				setAMove(x, y, 1, a);
-				// PC's turn
-				if (!end) {
-					Point p = AI(2);
-					setAMove(p.x, p.y, 2, a);
-				}
+		if (getBoardState().getPosition(x, y) == 0) {
+			setAMove(x, y, 1, a);
+			// PC's turn
+			if (!end) { 
+				Point p = AI(2);
+				setAMove(p.x, p.y, 2, a);
 			}
-		
-
 		}
+		
+		//Check if the game ends
 		if (end) {
 			if (player instanceof GomokuAI && playerWin.equals("2")) {
-				playerWin = "Computer";
+				playerWin = "PC";
 			}
-			
-			dialog("Player " + playerWin + " win!");
+			showDialog("Player " + playerWin + " won!");
 			return;
 		}
 	}
@@ -134,6 +86,13 @@ public class Controller implements IController {
 	int totalMoves = 0;
 	String playerWin = "";
 
+	/**
+	 * Set a move on the board
+	 * @param x
+	 * @param y
+	 * @param player
+	 * @param a
+	 */
 	private void setAMove(int x, int y, int player, Button[][] a) {
 		getBoardState().setPosition(x, y, player);
 		x1 = x;
@@ -179,11 +138,31 @@ public class Controller implements IController {
 		}
 	}
 
-	@Override
-	public void setSwing(Swing swing) {
-		this.swing = swing;
+	public void showDialog(String title) {
+		Alert alert = new Alert(AlertType.CONFIRMATION);
+		alert.setTitle("Game over");
+		alert.setHeaderText(title);
+		alert.setContentText("Do you want to replay?");
+
+		Optional<ButtonType> result = alert.showAndWait();
+		if (result.get() == ButtonType.OK) {
+				view.replayComputer();
+		} 
 	}
 
+	@Override
+	public void reset(Button[][] a) {
+		totalMoves = 0;
+
+		getBoardState().resetBoard();
+		for (int i = 0; i < a.length; i++) {
+			for (int j = 0; j < a[i].length; j++) {
+				a[i][j].setGraphic(null);
+				a[i][j].setStyle("-fx-background-color: rgb(220,220,220);");
+			}
+		}
+	}
+	
 	@Override
 	public void setPlayer(Player player) {
 		this.player = player;
@@ -196,20 +175,12 @@ public class Controller implements IController {
 	EventHandler<ActionEvent> event = new EventHandler<ActionEvent>() {
 		@Override
 		public void handle(ActionEvent e) {
-
 		}
 	};
-
-	public void dialog(String title) {
-		Alert alert = new Alert(AlertType.CONFIRMATION);
-		alert.setTitle("Game over");
-		alert.setHeaderText(title);
-		alert.setContentText("Do you want to replay?");
-
-		Optional<ButtonType> result = alert.showAndWait();
-		if (result.get() == ButtonType.OK) {
-				view.replayComputer();
-		} 
+	
+	@Override
+	public boolean isEnd() {
+		return end;
 	}
 
 	@Override
@@ -224,18 +195,5 @@ public class Controller implements IController {
 
 	public Player getPlayer() {
 		return player;
-	}
-
-	@Override
-	public void reset(Button[][] a) {
-		totalMoves = 0;
-
-		getBoardState().resetBoard();
-		for (int i = 0; i < a.length; i++) {
-			for (int j = 0; j < a[i].length; j++) {
-				a[i][j].setGraphic(null);
-				a[i][j].setStyle("-fx-background-color: rgb(220,220,220);");
-			}
-		}
 	}
 }
