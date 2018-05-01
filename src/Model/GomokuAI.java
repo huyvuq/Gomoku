@@ -1,6 +1,12 @@
 package Model;
 
 import java.util.ArrayList;
+
+/**
+ * Gomoku AI
+ * @author Huy Vu
+ *
+ */
 public class GomokuAI implements Player {
 	
 	EvaluationBoard eBoard;
@@ -21,11 +27,11 @@ public class GomokuAI implements Player {
 	}
 
 	
-	
-	
 	/**
 	 * Evaluation function
 	 * calculate the effectiveness
+	 * player 1 = Human, player 2 = PC
+	 * score calculated than applied to eBoard for alpha-beta pruning
 	 */
 	public void evalChessBoard(int player, EvaluationBoard eBoard) {
 		eBoard.resetBoard();
@@ -34,6 +40,12 @@ public class GomokuAI implements Player {
 
 	}
 	
+	/**
+	 * Support function for evalChessBoard function
+	 * @param player
+	 * @param eBoard
+	 * @param direction : Direction we need to check
+	 */
 	public void evalChessBoardWithDirection(int player, EvaluationBoard eBoard, int direction) {
 		
 		int ePC, eHuman;
@@ -145,74 +157,53 @@ public class GomokuAI implements Player {
 	 * @param player
 	 */
 	public void alphaBeta(int alpha, int beta, int depth, int player) {
-		if(player==2){
-			maxVal(boardState, alpha, beta, maxDepth);
-		}else{
-			minVal(boardState, alpha, beta, maxDepth);
+		if(player==2){ //PC
+			minMax(boardState, alpha, beta, depth, true);
+		}else{ //Human
+			minMax(boardState, alpha, beta, depth, false);
 		}
 	}
 
-	private int maxVal(BoardState state, int alpha, int beta, int depth) {
-		evalChessBoard(2, eBoard);
-		eBoard.MaxPos();
-		int value = eBoard.evaluationBoard;
-		if (depth < 0) {
-			return value;
+	private int minMax(BoardState state, int alpha, int beta, int depth, boolean maximizingLayer) {
+		int evalationValue = maximizingLayer == true? 2 : 1;
+		
+		evalChessBoard(evalationValue, eBoard); //First, evaluates and applies score to evaluation board
+		eBoard.MaxPos(); //Get max score
+		if (depth < 0) { //If we reach the depth limit, quit evaluating
+			return eBoard.score;
 		}
-		evalChessBoard(2, eBoard);
-		ArrayList<Point> list = new ArrayList<>();
+		ArrayList<Point> list = new ArrayList<>(); //Store list of points that has maximum values on the board when we try a set number of time (set with maxMove)
 		for (int i = 0; i < maxMove; i++) {
 			Point node = eBoard.MaxPos();
-			if(node == null)break;
-			list.add(node);
+			if(node == null)break; //If there is no point has maximum value, quit
+			list.add(node); 
 			eBoard.EBoard[node.x][node.y] = 0;
 		}
-		int v = Integer.MIN_VALUE;
-		for (int i = 0; i < list.size(); i++) {
+		int v =  maximizingLayer == true ? Integer.MIN_VALUE : Integer.MAX_VALUE;
+		for (int i = 0; i < list.size(); i++) { //Loop through the list of max score points
 			Point com = list.get(i);
 			state.setPosition(com.x, com.y, 2);
-			v = Math.max(v, minVal(state, alpha, beta, depth-1));
+			v = maximizingLayer ? Math.max(v, minMax(state, alpha, beta, depth-1, !maximizingLayer)) : Math.min(v, minMax(state, alpha, beta, depth-1, !maximizingLayer));;
 			state.setPosition(com.x, com.y, 0);
-			if(v>= beta || state.checkEnd(com.x, com.y)==2){
-				goPoint = com;
-				return v;
-				
+
+			if (maximizingLayer) {
+				if(v>= beta || state.checkEnd(com.x, com.y)==evalationValue){
+					goPoint = com;
+					return v;
+					
+				}
+				alpha = Math.max(alpha, v);
 			}
-			alpha = Math.max(alpha, v);
+			else {
+				if(v<= alpha || state.checkEnd(com.x, com.y)==evalationValue){
+					return v;
+				}
+				beta = Math.min(beta, v);
+			}
 		}
 
 		return v;
 	}
-
-	private int minVal(BoardState state, int alpha, int beta, int depth) {
-		evalChessBoard(1, eBoard);
-		eBoard.MaxPos();
-		int value = eBoard.evaluationBoard;
-		if (depth < 0) {
-			return value;
-		}
-		evalChessBoard(1, eBoard);
-		ArrayList<Point> list = new ArrayList<>();
-		for (int i = 0; i < maxMove; i++) {
-			Point node = eBoard.MaxPos();
-			if(node==null)break;
-			list.add(node);
-			eBoard.EBoard[node.x][node.y] = 0;
-		}
-		int v = Integer.MAX_VALUE;
-		for (int i = 0; i < list.size(); i++) {
-			Point com = list.get(i);
-			state.setPosition(com.x, com.y, 1);
-			v = Math.min(v, maxVal(state, alpha, beta, depth-1));
-			state.setPosition(com.x, com.y, 0);
-			if(v<= alpha || state.checkEnd(com.x, com.y)==1){
-				return v;
-			}
-			beta = Math.min(beta, v);
-		}
-		return v;
-	}
-
 
 	// @Override
 	/**

@@ -1,18 +1,39 @@
 package Model;
 
+/**
+ * Class : - State of Gomoku board
+ * @author apple
+ *
+ */
 public class BoardState {
 	public static int[][] boardArr;
 	public int width;
 	public int height;
 
+	/**
+	 * Constructor
+	 * @param width
+	 * @param height
+	 */
 	public BoardState(int width, int height) {
 		boardArr = new int[width][height];
 		this.height = height;
 		this.width = width;
 	}
+	
+	/**
+	 * Clear the board
+	 */
 	public void resetBoard(){
 		boardArr = new int[width][height];
 	}
+	
+	/**
+	 * Function to check if the game ends
+	 * @param rw (row)
+	 * @param cl (column)
+	 * @return
+	 */
 	public int checkEnd(int rw, int cl) {
 		int r = 0, c = 0;
 		
@@ -61,7 +82,8 @@ public class BoardState {
 		return 0;
 	}
 
-	public int getCheckResult(int r, int c, int a, int b) {
+	//Suport function for the checkEnd function above
+	private int getCheckResult(int r, int c, int a, int b) {
 		boolean human = true;
 		boolean pc = true;
 		for (int i = 0; i < 5; i++) {

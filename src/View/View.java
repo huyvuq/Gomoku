@@ -18,6 +18,11 @@ import javafx.scene.layout.GridPane;
 import javafx.scene.layout.VBox;
 import javafx.stage.Stage;
 
+/**
+ * View controller
+ * @author Huy Vu
+ *
+ */
 public class View implements EventHandler<ActionEvent> {
 	static final int W = 20; //board size
 	static final int H = 20;
